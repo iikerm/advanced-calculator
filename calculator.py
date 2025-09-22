@@ -637,13 +637,13 @@ def diffWindow(partial=False) -> None:
         if forWhat.lower() == "code":
             CodeInfoWindow(code=f"diff({calculus.cleanExpr(func)}{f', {itof}' if partial else ''})",
                            labelTitleText=f"Code used for calculating{' partial' if partial else ''} derivatives",
-                           library="from sympy import *")
+                           library="from sympy import *", dimensions="380x200")
 
         if recallingDiff:
             recallingDiff = False
             if forWhat.lower() == "calc":
                 try:
-                    toShow, diffMsg = calculus.calcDiff(func, inTermsOf=itof, partial=partial)
+                    toShow, diffMsg = calculus.calculateDifferential(func, inTermsOf=itof, partial=partial)
                 except Exception as e:
                     # Catches exceptions raised by Sympy whenever it can't calculate a differential
                     # print(f"DEBUG: An error happened, specifically:\n {e} \n\n Tried: {calculus.cleanExpr(func)}")
@@ -748,7 +748,7 @@ def integWindow() -> None:
         if recallingInteg:
             if forWhat.lower() == "calc":
                 try:
-                    toShow, integMsg = calculus.calcInteg(func, inTermsOf=itof, uBound=uBoundSrc, lBound=lBoundSrc)
+                    toShow, integMsg = calculus.calculateIntegral(func, inTermsOf=itof, uBound=uBoundSrc, lBound=lBoundSrc)
                 except Exception as e:
                     # Exceptions will be caught all the time because the program will try to integrate incomplete expressions
                     # print(f"An error happened, specifically:\n {e} \n\n Tried: {calculus.cleanExpr(func)}")
