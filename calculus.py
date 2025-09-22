@@ -1,7 +1,14 @@
 from sympy import *
 
 
-def preCalc(expr: str):
+def preCalc(expr: str) -> str:
+    """
+    Parses the expression received in order for sympy to understand expressions in other languages or other ways of
+    writing some mathematical functions (e.g. sen (seno) is the spanish way to write sin (sine) and sympy only
+    understands sin).
+    :param expr: expression to parse
+    :return: parsed expression
+    """
     synonymsDict = {"sen": "sin", "arcsin": "asin",
                     "arcos": "acos", "arccos": "acos",
                     "tg": "tan", "arctan": "atan", "∞": "oo"}
@@ -10,18 +17,26 @@ def preCalc(expr: str):
         expr = expr.replace(key, synonymsDict[key])
     return expr
 
-def cleanExpr(expr: str):
-    # superIndexList = [f'^0', f'\u00b9', f'\u00b2', f'\u00b3', f'^4',
-    #                   f'^5', f'^6', f'^7', f'^8', f'^9']
+def cleanExpr(expr: str) -> str:
+    """
+    Improves readability of the functions that result of integral or differential calculations by parsing to substitute
+    certain expressions, for example by substituting expressions like '^exponent' by superscript characters to represent
+    exponents, or swapping the python exponent representation (**) for an easier to read representation (^).
+    :param expr: function to be parsed
+    :return: 'clean' parsed function
+    """
+    substituteDict = {"**": "^", "*": "·"}
 
-    subDict = {"sqrt": "√", "**": "^", "*": "·"}
+    # Only 3 exponents that I managed to represent properly in utf-8
     superIndexDict = {"^1 ": f'\u00b9 ', "^2 ": f'\u00b2 ', "^3 ": f'\u00b3 '}
 
     expr = str(expr)
     expr += " "
 
-    expr = expr.replace("**", "^")
-    # Only 3 exponents that I managed to represent properly in utf-8 (or any other encoding)
+    for key in substituteDict.keys():
+        if expr.__contains__(key):
+            expr = expr.replace(key, substituteDict[key])
+
     for key in superIndexDict.keys():
         if expr.__contains__(key):
             try:
@@ -31,11 +46,20 @@ def cleanExpr(expr: str):
             else:
                 expr = expr.replace(key, superIndexDict[key])
 
-    expr = expr.replace("*", "·")
     return expr.strip()
 
 
-def calcDiff(func: str, inTermsOf=None, nth=1, partial=False):
+def calculateDifferential(func: str, inTermsOf=None, nth=1, partial=False) -> (Derivative, str):
+    """
+    Computes the nth differential (partial or whole) of the received function.
+    :param func: function whose differential will be calculated
+    :param inTermsOf: variable in terms of which the differential will be calculated
+    :param nth: the differential to be calculated (i.e. nth=2 means the 2nd derivative of the function
+    will be calculated)
+    :param partial: indicates if the differential should be partial (True), or whole (False)
+    :return: The calculated derivative (if possible), along with a message, which will be the error message produced if
+    the derivative was not computable.
+    """
     d = preCalc(func)
     count = 0
 
@@ -59,11 +83,18 @@ def calcDiff(func: str, inTermsOf=None, nth=1, partial=False):
             d = diff(d, inTermsOf)
             count += 1
 
-    # print("CLEANEXPR RESULT:\n" + cleanExpr(d))
     return d, "Differential calculated successfully"
 
-
-def calcInteg(func: str, inTermsOf=None, uBound: str="0", lBound: str="0"):
+def calculateIntegral(func: str, inTermsOf=None, uBound: str= "0", lBound: str= "0") -> (Integral, str):
+    """
+    Computes the integral (definite or indefinite) of the received function.
+    :param func: function whose integral will be computed
+    :param inTermsOf: variable to integrate
+    :param uBound: upper bound of the integral (as a string so that things like sin(x), x, x**2, etc. can be used)
+    :param lBound: lower bound of the integral (as a string so that things like sin(x), x, x**2, etc. can be used)
+    :return: The calculated integral (if possible), along with a message, which will be the error message produced if
+    the integral was not computable.
+    """
     r = preCalc(func)
     uBound = preCalc(uBound)
     lBound = preCalc(lBound)
@@ -82,9 +113,3 @@ def calcInteg(func: str, inTermsOf=None, uBound: str="0", lBound: str="0"):
 
     return r, "Integral calculated successfully"
 
-
-if __name__ == '__main__':
-    # For debug
-    print(calcDiff("x**2+y**2", "x", nth=1))
-    print(cleanExpr("x**4"))
-    print(calcInteg("x**2", "x", "-oo", "oo"))
