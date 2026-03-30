@@ -352,7 +352,7 @@ class OperationTypeGroup:
             self.masterFrame.place_configure(relheight=relHeight)
 
     def add_button(self, text: str, width=20, height=1,
-                   bg=LIGHT_DARK_DECO_BG, justify=tk.CENTER, typ="normal") -> tk.Button:
+                   bg=LIGHT_DARK_DECO_BG, justify=tk.CENTER) -> DefaultButton:
         """
         Method that adds a DefaultButton or a ColorButton to the current group
         :param text: Button text
@@ -366,24 +366,28 @@ class OperationTypeGroup:
         if width == 0:
             width = None
 
-        if typ.lower() == "normal":
-            tempButton = DefaultButton(self.frame_obj, text=text, height=height, width=width, bg=bg,
-                                       activebackground=LIGHT_DARK_DECO_BG, justify=justify)
+        tempButton = DefaultButton(self.frame_obj, text=text, height=height, width=width, bg=bg,
+                                   activebackground=LIGHT_DARK_DECO_BG, justify=justify)
 
-            self.groupButtons.append(tempButton)
-            self.groupAll.append(tempButton)
+        self.groupButtons.append(tempButton)
+        self.groupAll.append(tempButton)
 
-            tempButton.gridBt(row=self.groupAll.index(tempButton), column=0, pady=2)
+        tempButton.gridBt(row=self.groupAll.index(tempButton), column=0, pady=2)
 
-        elif typ.lower() == "color":
-            tempButton = ColorButton(self.frame_obj, text=text)
+        return tempButton
 
-            self.groupButtons.append(tempButton)
-            self.groupAll.append(tempButton)
+    def add_color_button(self, text: str, width=20, height=1,
+                   bg=LIGHT_DARK_DECO_BG, bd=1) -> ColorButton:
 
-            tempButton.grid(row=self.groupAll.index(tempButton), column=0, pady=2)
-        else:
-            raise Exception(f"Invalid button type: {typ}, must be either 'Normal' or 'Color'")
+        if width == 0:
+            width = None
+
+        tempButton = ColorButton(self.frame_obj, text=text, width=width, height=height, bg=bg, bd=bd)
+
+        self.groupButtons.append(tempButton)
+        self.groupAll.append(tempButton)
+
+        tempButton.grid(row=self.groupAll.index(tempButton), column=0, pady=2)
 
         return tempButton
 
