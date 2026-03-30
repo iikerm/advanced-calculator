@@ -6,24 +6,70 @@ import graphing
 import calculus
 import uiElements as ui
 
-def graph2dWindow() -> None:
-    """
-    Function that generates a window for introducing parameters to generate a representation of a 2D graph from a
-    mathematical function.
-    """
-    def generate2dGraph(master: tk.Tk, params: list, forWhat="graph") -> None:
+
+class Graph2D:
+    def __init__(self):
         """
-        Reads a specific set of parameters in order to generate the graph
-        :param master: tk.Tk object that contains the button that called this function.
-        :param params: a list containing 3 ui.OperationTypeGroups: [graph, color, range]. The graph group contains
-        things like the function to represent, the variable it is in terms of etc., the color group contains the color
-        and the range group contains information about the range of the function that will be drawn.
+        Generates a window for introducing parameters to generate a representation of a 2D graph from a
+        mathematical function.
+        """
+
+        self.window2d = tk.Tk()
+        self.window2d.geometry("460x320")
+        self.window2d.title("Building a 2D graph (sympy)")
+        self.window2d.configure(bg=ui.WINDOW_BG)
+        self.window2d.focus_force()
+
+        labelTitle2d = ui.TitleLabel(self.window2d, text="Preparing the 2D graph:", relx=0.15, rely=0.1)
+
+        self.graph2dGroup = ui.OperationTypeGroup(self.window2d, name="Enter parameters: ", relx=0.15, rely=0.3)
+        funcLabel = self.graph2dGroup.add_label("Function:")
+        funcEntry = self.graph2dGroup.add_entry(width=20, row=1)
+
+        spaceLabel = self.graph2dGroup.add_label("       ")
+
+        tofLabel = self.graph2dGroup.add_label("In terms of:")
+        tofEntry = self.graph2dGroup.add_entry(width=5, placeholder="x")
+        tofEntry.entryFrame.grid_configure(sticky=tk.W)
+
+        self.color2dGroup = ui.OperationTypeGroup(self.window2d, name="Select color: ", relx=0.5, rely=0.3)
+        colLabel = self.color2dGroup.add_label("Click me  ⬇")
+        colButton = self.color2dGroup.add_button(text="", bg="blue", typ="color")
+
+        self.vis2dGroup = ui.OperationTypeGroup(self.window2d, name="Visibility of the function: ", relx=0.5, rely=0.6)
+        visFromEntry = self.vis2dGroup.add_entry(placeholder="from", width=5)
+        visSpaceLabel = self.vis2dGroup.add_label("                         ")
+        visSpaceLabel.grid_configure(row=0, column=1)
+        visToEntry = self.vis2dGroup.add_entry(placeholder="to", width=5, column=2, row=0)
+
+        button2dOk = ui.DefaultButton(self.window2d, text="Draw function", width=0)  # width 0 is default
+        button2dOk.configure(
+            command=lambda: self.generateGraph())
+        button2dOk.placeBt(relx=0.66, rely=0.8)
+
+        button2dCode = ui.DefaultButton(self.window2d, text="See code", width=0)  # width 0 is default
+        button2dCode.placeBt(relx=0.46, rely=0.8)
+        button2dCode.configure(
+            command=lambda: self.generateGraph(forWhat="code"))
+
+        self.window2d.bind("<Escape>", lambda event: self.window2d.destroy())
+
+        self.window2d.bind("<Return>",
+                           lambda event: self.generateGraph())
+        # Does the same as the button2dOk when you press enter (return key)
+
+        self.window2d.resizable(False, False)
+        self.window2d.mainloop()
+
+    def generateGraph(self, forWhat="graph") -> None:
+        """
+        Generates the actual 2D graph
         :param forWhat: Indicates if this function should create an ui.CodeInfoWindow ("code") or if it should
         generate a graph ("graph")
         """
         dataList = []
 
-        for group in params:
+        for group in [self.graph2dGroup, self.color2dGroup, self.vis2dGroup]:
             for widget in group.groupAll:
                 if type(widget) == ui.UnderlinedEntry:
                     dataList.append(widget.get())
@@ -34,7 +80,7 @@ def graph2dWindow() -> None:
 
         if dataList[0] == "":
             messagebox.showerror("Unfilled parameters", "Please fill in all of the parameters")
-            window2d.focus_force()
+            self.window2d.focus_force()
             return
 
         # Sets unfilled parameters to default
@@ -44,89 +90,92 @@ def graph2dWindow() -> None:
             dataList[4] = "5"
 
         if forWhat == "graph":
-            master.title("Generating graph...")
+            self.window2d.title("Generating graph...")
             graph, errReport = graphing.makeGraph2d(func=dataList[0], inTermsOf=dataList[1],
-                                               visionRange=(dataList[3], dataList[4]), funcHue=dataList[2])
+                                                    visionRange=(dataList[3], dataList[4]), funcHue=dataList[2])
 
             if graph is None:
                 errReport = errReport.split(" | ")
                 messagebox.showerror(errReport[0], errReport[1])
-                window2d.focus_force()
+                self.window2d.focus_force()
                 return
             else:
-                master.after(1, lambda: graph.show())
-                master.after(1000, lambda: master.title("Building a 2D graph (sympy)"))
+                self.window2d.after(1, lambda: graph.show())
+                self.window2d.after(1000, lambda: self.window2d.title("Building a 2D graph (sympy)"))
 
         elif forWhat == "code":
             ui.CodeInfoWindow(code=f"plot({dataList[0]}, (inTermsOf={dataList[1]}, visionRangeMin={dataList[3]}, "
-                               f"visionRangeMax={dataList[4]}), line_color={dataList[2]})",
-                           labelTitleText="Code used for 2D graph", library="from sympy.plotting import plot")
+                                   f"visionRangeMax={dataList[4]}), line_color={dataList[2]})",
+                              labelTitleText="Code used for 2D graph", library="from sympy.plotting import plot")
         else:
             raise SyntaxError(f"Invalid 'forWhat' given: {forWhat},\nExpected 'calc' or 'code'")
 
 
-    window2d = tk.Tk()
-    window2d.geometry("460x320")
-    window2d.title("Building a 2D graph (sympy)")
-    window2d.configure(bg=ui.WINDOW_BG)
-    window2d.focus_force()
-
-    labelTitle2d = ui.TitleLabel(window2d, text="Preparing the 2D graph:", relx=0.15, rely=0.1)
-
-    graph2dGroup = ui.OperationTypeGroup(window2d, name="Enter parameters: ", relx=0.15, rely=0.3)
-    funcLabel = graph2dGroup.add_label("Function:")
-    funcEntry = graph2dGroup.add_entry(width=20, row=1)
-
-    spaceLabel = graph2dGroup.add_label("       ")
-
-    tofLabel = graph2dGroup.add_label("In terms of:")
-    tofEntry = graph2dGroup.add_entry(width=5, placeholder="x")
-    tofEntry.entryFrame.grid_configure(sticky=tk.W)
-
-    color2dGroup = ui.OperationTypeGroup(window2d, name="Select color: ", relx=0.5, rely=0.3)
-    colLabel = color2dGroup.add_label("Click me  ⬇")
-    colButton = color2dGroup.add_button(text="", bg="blue", typ="color")
-
-    vis2dGroup = ui.OperationTypeGroup(window2d, name="Visibility of the function: ", relx=0.5, rely=0.6)
-    visFromEntry = vis2dGroup.add_entry(placeholder="from", width=5)
-    visSpaceLabel = vis2dGroup.add_label("                         ")
-    visSpaceLabel.grid_configure(row=0, column=1)
-    visToEntry = vis2dGroup.add_entry(placeholder="to", width=5, column=2, row=0)
-
-    button2dOk = ui.DefaultButton(window2d, text="Draw function", width=0)     # width 0 is default
-    button2dOk.configure(command=lambda: generate2dGraph(window2d, [graph2dGroup, color2dGroup, vis2dGroup]))
-    button2dOk.placeBt(relx=0.66, rely=0.8)
-
-    button2dCode = ui.DefaultButton(window2d, text="See code", width=0)     # width 0 is default
-    button2dCode.placeBt(relx=0.46, rely=0.8)
-    button2dCode.configure(command=lambda: generate2dGraph(window2d, [graph2dGroup, color2dGroup, vis2dGroup], forWhat="code"))
-
-    window2d.bind("<Escape>", lambda event: window2d.destroy())
-
-    window2d.bind("<Return>", lambda event: generate2dGraph(window2d, [graph2dGroup, color2dGroup, vis2dGroup]))
-    # Does the same as the button2dOk when you press enter (return key)
-
-    window2d.resizable(False, False)
-    window2d.mainloop()
-
-
-def graph3dWindow():
-    """
-    Function that generates a window for introducing parameters to generate a representation of a 3D graph from a
-    mathematical function.
-    """
-    def generate3dGraph(master: tk.Tk, params: list, forWhat="graph") -> None:
+class Graph3D:
+    def __init__(self):
         """
-        Reads a specific set of parameters in order to generate the graph
-        :param master: tk.Tk object that contains the button that called this function.
-        :param params: A list containing 2 ui.OperationTypeGroup objects in this order [graph, range]
-        :param forWhat: Indicates if this function should create an ui.CodeInfoWindow ("code") or if it should
-        generate a graph ("graph")
+        Generates a window for introducing parameters to generate a representation of a 3D graph from a
+        mathematical function.
+        """
+
+        self.window3d = tk.Tk()
+        self.window3d.geometry("460x320")
+        self.window3d.title("Building a 3D graph (sympy)")
+        self.window3d.configure(bg=ui.WINDOW_BG)
+        self.window3d.focus_force()
+
+        labelTitle3d = ui.TitleLabel(self.window3d, text="Preparing the 3D graph:", relx=0.1, rely=0.1)
+
+        self.graph3dGroup = ui.OperationTypeGroup(self.window3d, name="Enter parameters: ", relx=0.1, rely=0.3)
+        funcLabel = self.graph3dGroup.add_label("Function:")
+        funcEntry = self.graph3dGroup.add_entry(width=20, row=1)
+
+        spaceLabel = self.graph3dGroup.add_label("       ")
+
+        tofLabel = self.graph3dGroup.add_label("In terms of:")
+        tofXEntry = self.graph3dGroup.add_entry(width=5, placeholder="x")
+        tofXEntry.entryFrame.grid_configure(sticky=tk.W)
+
+        tofYEntry = self.graph3dGroup.add_entry(width=5, placeholder="y")
+        tofYEntry.entryFrame.grid_configure(sticky=tk.W)
+
+        self.vis3dGroup = ui.OperationTypeGroup(self.window3d, name="Visibility of the function: ", relx=0.45, rely=0.3)
+        vis3dInfoLabelX = self.vis3dGroup.add_label(text="For first variable (x)")
+        visFromEntryX = self.vis3dGroup.add_entry(placeholder="from", width=5)
+        visSpaceLabelX = self.vis3dGroup.add_label("           ")
+        visSpaceLabelX.grid_configure(row=0, column=1)
+        visToEntryX = self.vis3dGroup.add_entry(placeholder="to", width=5, column=2, row=1)
+
+        vis3dInfoLabelY = self.vis3dGroup.add_label(text="For second variable (y)")
+        visFromEntryY = self.vis3dGroup.add_entry(placeholder="from", width=5)
+        visToEntryY = self.vis3dGroup.add_entry(placeholder="to", width=5, column=2, row=5)
+
+        button3dOk = ui.DefaultButton(self.window3d, text="Draw function", width=0)
+        button3dOk.configure(command=lambda: self.generateGraph())
+        button3dOk.placeBt(relx=0.72, rely=0.72)
+
+        button3dCode = ui.DefaultButton(self.window3d, text="See code", width=0)  # width 0 is default
+        button3dCode.placeBt(relx=0.45, rely=0.72)
+        button3dCode.configure(command=lambda: self.generateGraph(forWhat="code"))
+
+        self.window3d.bind("<Escape>", lambda event: self.window3d.destroy())
+
+        self.window3d.bind("<Return>", lambda event: self.generateGraph())
+        # Does the same as the button2dOk when you press enter (return key)
+
+        self.window3d.resizable(False, False)
+        self.window3d.mainloop()
+
+    def generateGraph(self, forWhat="graph") -> None:
+        """
+        Generates the actual 3D graph
+        :param forWhat: Indicates if this function should create an ui.CodeInfoWindow ("code") to display the code or
+        if it should generate the graph ("graph")
         :return:
         """
         dataList = []
 
-        for group in params:
+        for group in [self.graph3dGroup, self.vis3dGroup]:
             for widget in group.groupAll:
                 if type(widget) == ui.UnderlinedEntry:
                     dataList.append(widget.get())
@@ -135,17 +184,17 @@ def graph3dWindow():
 
         if dataList[0] == "":
             messagebox.showerror("Unfilled parameters", "Please fill in all of the parameters")
-            window3d.focus_force()
+            self.window3d.focus_force()
             return
 
         for i in range(3, len(dataList)):
             if dataList[i] == "from":
-                dataList[i] = "-10"      # Sets unfilled parameters to default
+                dataList[i] = "-10"  # Sets unfilled parameters to default
             if dataList[i] == "to":
                 dataList[i] = "10"
 
         if forWhat == "graph":
-            master.title("Generating graph...")
+            self.window3d.title("Generating graph...")
             graph, errReport = graphing.makeGraph3d(func=dataList[0], inTermsOfX=dataList[1], inTermsOfY=dataList[2],
                                                     visionRangeX=(dataList[3], dataList[4]),
                                                     visionRangeY=(dataList[5], dataList[6]))
@@ -153,97 +202,85 @@ def graph3dWindow():
             if graph is None:
                 errReport = errReport.split(" | ")
                 messagebox.showerror(errReport[0], errReport[1])
-                window3d.focus_force()
+                self.window3d.focus_force()
                 return
             else:
-                master.after(1, lambda: graph.show())
-                master.after(1000, lambda: master.title("Building a 3D graph (sympy)"))
+                self.window3d.after(1, lambda: graph.show())
+                self.window3d.after(1000, lambda: self.window3d.title("Building a 3D graph (sympy)"))
 
         elif forWhat == "code":
             ui.CodeInfoWindow(code=f"plot3d({dataList[0]}, (inTermsOfX={dataList[1]}, visionRangeMinX={dataList[3]}, "
-                               f"visionRangeMaxX={dataList[4]}), "
-                               f"(inTermsOfY={dataList[2]}, visionRangeMinY={dataList[5]}, "
-                               f"visionRangeMaxY={dataList[6]}))",
-                           labelTitleText="Code used for 3D graph", library="from sympy.plotting import plot3d")
+                                   f"visionRangeMaxX={dataList[4]}), "
+                                   f"(inTermsOfY={dataList[2]}, visionRangeMinY={dataList[5]}, "
+                                   f"visionRangeMaxY={dataList[6]}))",
+                              labelTitleText="Code used for 3D graph", library="from sympy.plotting import plot3d")
 
         else:
             raise SyntaxError(f"Invalid 'forWhat' given: {forWhat},\nExpected 'calc' or 'code'")
 
-    window3d = tk.Tk()
-    window3d.geometry("460x320")
-    window3d.title("Building a 3D graph (sympy)")
-    window3d.configure(bg=ui.WINDOW_BG)
-    window3d.focus_force()
 
-    labelTitle3d = ui.TitleLabel(window3d, text="Preparing the 3D graph:", relx=0.1, rely=0.1)
+class DifferentialCalculator:
+    def __init__(self, partial=False):
+        """
+        Function that generates a window where the user can introduce mathematical functions and see their derivative
+        (partial or full) in real-time.
+        :param partial: True if the differential is going to be partial, false otherwise
+        """
+        self.partial = partial
 
-    graph3dGroup = ui.OperationTypeGroup(window3d, name="Enter parameters: ", relx=0.1, rely=0.3)
-    funcLabel = graph3dGroup.add_label("Function:")
-    funcEntry = graph3dGroup.add_entry(width=20, row=1)
+        #   char acts as a border signalling the end of the 'in terms of' char that will be inserted
+        if partial:
+            self.ansText = "∂ /∂f||"
+            self.insertPosAnsText = 1
+        else:
+            self.ansText = "d/d ||"
+            self.insertPosAnsText = 3
 
-    spaceLabel = graph3dGroup.add_label("       ")
+        self.windowDiff = tk.Tk()
+        self.windowDiff.geometry("460x320")
+        self.windowDiff.configure(background=ui.WINDOW_BG)
+        self.windowDiff.title(f"Calculating a{' partial ' if partial else ' '}derivative (sympy)")
+        self.windowDiff.focus_force()
 
-    tofLabel = graph3dGroup.add_label("In terms of:")
-    tofXEntry = graph3dGroup.add_entry(width=5, placeholder="x")
-    tofXEntry.entryFrame.grid_configure(sticky=tk.W)
+        labelTitleDiff = ui.TitleLabel(self.windowDiff, text="Preparing the differential: ", relx=0.1, rely=0.1)
 
-    tofYEntry = graph3dGroup.add_entry(width=5, placeholder="y")
-    tofYEntry.entryFrame.grid_configure(sticky=tk.W)
+        paramsGroupDiff = ui.OperationTypeGroup(self.windowDiff, name="Enter parameters: ", relx=0.1, rely=0.3)
+        self.resultLabelDiff = tk.Label(self.windowDiff, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS,
+                                        font=ui.GEN_CODE_FONT(), text="", pady=10, padx=10)
+        self.resultLabelDiff.place(relx=0.5, rely=0.7, anchor=tk.CENTER)
 
-    vis3dGroup = ui.OperationTypeGroup(window3d, name="Visibility of the function: ", relx=0.45, rely=0.3)
-    vis3dInfoLabelX = vis3dGroup.add_label(text="For first variable (x)")
-    visFromEntryX = vis3dGroup.add_entry(placeholder="from", width=5)
-    visSpaceLabelX = vis3dGroup.add_label("           ")
-    visSpaceLabelX.grid_configure(row=0, column=1)
-    visToEntryX = vis3dGroup.add_entry(placeholder="to", width=5, column=2, row=1)
+        paramsGroupDiff.add_label("Enter function: ")
+        self.funcEntryDiff = paramsGroupDiff.add_entry(width=15)
 
-    vis3dInfoLabelY = vis3dGroup.add_label(text="For second variable (y)")
-    visFromEntryY = vis3dGroup.add_entry(placeholder="from", width=5)
-    visToEntryY = vis3dGroup.add_entry(placeholder="to", width=5, column=2, row=5)
+        spaceLabelDiff = paramsGroupDiff.add_label("            ")
+        spaceLabelDiff.grid_configure(row=0, column=1)
 
-    button3dOk = ui.DefaultButton(window3d, text="Draw function", width=0)
-    button3dOk.configure(command=lambda: generate3dGraph(window3d, [graph3dGroup, vis3dGroup]))
-    button3dOk.placeBt(relx=0.72, rely=0.72)
+        itofLabelDiff = paramsGroupDiff.add_label("With respect to: ")
+        itofLabelDiff.grid_configure(row=0, column=2, sticky=tk.E)
+        self.itofEntryDiff = paramsGroupDiff.add_entry(placeholder="x", width=5, row=1, column=2)
+        self.itofEntryDiff.configure(justify=tk.LEFT)
 
-    button3dCode = ui.DefaultButton(window3d, text="See code", width=0)  # width 0 is default
-    button3dCode.placeBt(relx=0.45, rely=0.72)
-    button3dCode.configure(command=lambda: generate3dGraph(window3d, [graph3dGroup, vis3dGroup], forWhat="code"))
+        codeButtonDiff = ui.DefaultButton(self.windowDiff, text="See code", width=0)  # width 0 is default
+        codeButtonDiff.placeBt(relx=0.7, rely=0.42)
+        codeButtonDiff.configure(
+            command=lambda: self.handleKeyEvent(forWhat="code"))
 
-    window3d.bind("<Escape>", lambda event: window3d.destroy())
+        self.resultLabelDiff.configure(
+            text=(self.ansText[:self.insertPosAnsText] +
+                  self.itofEntryDiff.get() +
+                  self.ansText[self.insertPosAnsText:]).replace("||", " = "))
 
-    window3d.bind("<Return>", lambda event: generate3dGraph(window3d, [graph3dGroup, vis3dGroup]))
-    # Does the same as the button2dOk when you press enter (return key)
+        self.funcEntryDiff.bind("<Key>", lambda e: self.handleKeyEvent(e))
+        self.itofEntryDiff.bind("<Key>", lambda e: self.handleKeyEvent(e))
 
-    window3d.resizable(False, False)
-    window3d.mainloop()
+        self.windowDiff.bind("<Escape>", lambda e: self.windowDiff.destroy())
+        self.windowDiff.mainloop()
 
-
-def diffWindow(partial=False) -> None:
-    """
-    Function that generates a window where the user can introduce mathematical functions and see their derivative
-    (partial or full) in real-time.
-    :param partial: True if the differential is going to be partial, false otherwise
-    """
-
-    #   char acts as a border signalling the end of the itof char that will be inserted
-    if partial:
-        ansText = "∂ /∂f||"
-        insertPosAnsText = 1
-    else:
-        ansText = "d/d ||"
-        insertPosAnsText = 3
-
-
-    def diffHandleKeyEvent(entryList: list, labelList: list, event=None, forWhat="calc", recalling=False) -> None:
+    def handleKeyEvent(self, event=None, forWhat="calc", recalling=False) -> None:
         """
         Handler for the Key event in some entries. It reads the parameters received and decides what to do with them.
         It can either calculate the differential of the given mathematical function, or display a window with the
         python code used to do that.
-        :param entryList: A list containing the different entries where the data must be read from in the following
-        order: [function entry, function's variable (in terms of)]
-        :param labelList: A list containing the label(s) that must be modified to display the result or
-        relevant information about the integral calculation.
-        They must follow this order: [result label]
         :param event: The event that triggered this function call
         :param forWhat: Can be either 'calc', to indicate that the differential must be calculated,
         or 'code' to indicate that the code necessary for this calculation must be displayed
@@ -252,91 +289,122 @@ def diffWindow(partial=False) -> None:
         :return: None
         """
         recallingDiff = recalling
-        func = entryList[0].get()
-        itof = entryList[1].get()       # itof stands for in terms of
-        resultLabel = labelList[0]
+        func = self.funcEntryDiff.get()
+        itof = self.itofEntryDiff.get()  # itof stands for in terms of
+        # resultLabel = labelList[0]
 
         if forWhat.lower() == "code":
-            ui.CodeInfoWindow(code=f"diff({calculus.cleanExpr(func)}{f', {itof}' if partial else ''})",
-                           labelTitleText=f"Code used for calculating{' partial' if partial else ''} derivatives",
-                           library="from sympy import *", dimensions="380x200")
+            ui.CodeInfoWindow(code=f"diff({calculus.cleanExpr(func)}{f', {itof}' if self.partial else ''})",
+                              labelTitleText=f"Code used for calculating{' partial' if self.partial else ''} "
+                                             f"derivatives",
+                              library="from sympy import *", dimensions="380x200")
 
         if recallingDiff:
             recallingDiff = False
             if forWhat.lower() == "calc":
                 try:
-                    toShow, diffMsg = calculus.calculateDifferential(func, inTermsOf=itof, partial=partial)
+                    toShow, diffMsg = calculus.calculateDifferential(func, inTermsOf=itof, partial=self.partial)
                 except Exception as e:
                     # Catches exceptions raised by Sympy whenever it can't calculate a differential
                     # print(f"DEBUG: An error happened, specifically:\n {e} \n\n Tried: {calculus.cleanExpr(func)}")
-                    str(e)      # This line removes a warning
-                    resultLabel.configure(fg=ui.LIGHT_DARK_DECO_BG)     # Indicates that the differential is being calculated
-                else:
-                    baseText = resultLabel["text"][:resultLabel["text"].index("=") + 2]
+                    str(e)  # This line removes a warning
 
-                    baseText = baseText[:insertPosAnsText] + itof + baseText[baseText.index(" "):]
-                    resultLabel.configure(text=baseText + calculus.cleanExpr(toShow), fg=ui.FG_LABELS)
+                    # Indicates that the differential is being calculated:
+                    self.resultLabelDiff.configure(fg=ui.LIGHT_DARK_DECO_BG)
+                else:
+                    baseText = self.resultLabelDiff["text"][:self.resultLabelDiff["text"].index("=") + 2]
+
+                    baseText = baseText[:self.insertPosAnsText] + itof + baseText[baseText.index(" "):]
+                    self.resultLabelDiff.configure(text=baseText + calculus.cleanExpr(toShow), fg=ui.FG_LABELS)
             else:
                 raise SyntaxError(f"Invalid 'forWhat' given: {forWhat},\nExpected 'calc' or 'code'")
 
         else:
             recallingDiff = True
-            windowDiff.after(1, lambda: diffHandleKeyEvent(entryList, labelList, event, forWhat, recallingDiff))
+            self.windowDiff.after(1, lambda: self.handleKeyEvent(event, forWhat, recallingDiff))
 
 
-    windowDiff = tk.Tk()
-    windowDiff.geometry("460x320")
-    windowDiff.configure(background=ui.WINDOW_BG)
-    windowDiff.title(f"Calculating a{' partial 'if partial else ' '}derivative (sympy)")
-    windowDiff.focus_force()
-
-    labelTitleDiff = ui.TitleLabel(windowDiff, text="Preparing the differential: ", relx=0.1, rely=0.1)
-
-    paramsGroupDiff = ui.OperationTypeGroup(windowDiff, name="Enter parameters: ", relx=0.1, rely=0.3)
-    resultLabelDiff = tk.Label(windowDiff, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS, font=ui.GEN_CODE_FONT(), text="", pady=10,
-                               padx=10)
-    resultLabelDiff.place(relx=0.5, rely=0.7, anchor=tk.CENTER)
-
-    paramsGroupDiff.add_label("Enter function: ")
-    funcEntryDiff = paramsGroupDiff.add_entry(width=15)
-
-    spaceLabelDiff = paramsGroupDiff.add_label("            ")
-    spaceLabelDiff.grid_configure(row=0, column=1)
-
-    itofLabelDiff = paramsGroupDiff.add_label("With respect to: ")
-    itofLabelDiff.grid_configure(row=0, column=2, sticky=tk.E)
-    itofEntryDiff = paramsGroupDiff.add_entry(placeholder="x", width=5, row=1, column=2)
-    itofEntryDiff.configure(justify=tk.LEFT)
-
-    codeButtonDiff = ui.DefaultButton(windowDiff, text="See code", width=0)  # width 0 is default
-    codeButtonDiff.placeBt(relx=0.7, rely=0.42)
-    codeButtonDiff.configure(command=lambda: diffHandleKeyEvent([funcEntryDiff, itofEntryDiff], [resultLabelDiff], forWhat="code"))
-
-
-    resultLabelDiff.configure(text=(ansText[:insertPosAnsText] + itofEntryDiff.get() + ansText[insertPosAnsText:]).replace("||", " = "))
-
-    funcEntryDiff.bind("<Key>", lambda e: diffHandleKeyEvent([funcEntryDiff, itofEntryDiff], [resultLabelDiff], e))
-    itofEntryDiff.bind("<Key>", lambda e: diffHandleKeyEvent([funcEntryDiff, itofEntryDiff], [resultLabelDiff], e))
-
-    windowDiff.bind("<Escape>", lambda e: windowDiff.destroy())
-    windowDiff.mainloop()
-
-
-def integWindow() -> None:
-    """
-    Generates the integral calculation window
-    :return: None
-    """
-
-    def integHandleKeyEvent(entryList: list, labelList: list, event=None, forWhat="calc", recalling=False) -> None:
+class IntegralCalculator:
+    def __init__(self):
         """
-        Reads the parameters received and decides what to do with them. It can either calculate the integral of the
+        Generates the integral calculation window
+        :return: None
+        """
+
+        self.windowInteg = tk.Tk()
+        self.windowInteg.geometry("480x350")
+        self.windowInteg.configure(background=ui.WINDOW_BG)
+        self.windowInteg.title(f"Calculating an integral (sympy)")
+        self.windowInteg.focus_force()
+
+        labelTitleInteg = ui.TitleLabel(self.windowInteg, text="Preparing the integral", relx=0.15, rely=0.1)
+
+        paramsGroupInteg = ui.OperationTypeGroup(self.windowInteg, relx=0.15, rely=0.3, name="Parameters")
+
+        resultGroupX = 0.152
+        resultGroupY = 0.73
+        self.symbolLabelInteg = tk.Label(self.windowInteg, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS,
+                                         font=ui.GEN_CODE_FONT(30),
+                                         text="∫", pady=10,
+                                         padx=15, width=10, anchor=tk.W)
+        self.symbolLabelInteg.place(relx=resultGroupX, rely=resultGroupY)
+
+        self.resultLabelInteg = tk.Label(self.windowInteg, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS,
+                                         font=ui.GEN_CODE_FONT(),
+                                         text="", pady=0, padx=10)
+        self.resultLabelInteg.place(relx=resultGroupX + 0.11, rely=resultGroupY + 0.08)
+
+        self.upperBoundLabelInteg = tk.Label(self.windowInteg, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS,
+                                             font=ui.GEN_CODE_FONT(12),
+                                             text="")
+        self.upperBoundLabelInteg.place(relx=resultGroupX + 0.08, rely=resultGroupY + 0.03)
+
+        self.lowerBoundLabelInteg = tk.Label(self.windowInteg, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS,
+                                             font=ui.GEN_CODE_FONT(12),
+                                             text="")
+        self.lowerBoundLabelInteg.place(relx=resultGroupX + 0.08, rely=resultGroupY + 0.14)
+
+        buttonIntegCode = ui.DefaultButton(self.windowInteg, text="See code", width=0)  # width 0 means default width
+        buttonIntegCode.placeBt(relx=0.70, rely=0.62)
+        buttonIntegCode.configure(command=lambda: self.handleKeyEvent(forWhat="code"))
+
+        buttonClearAllInteg = ui.DefaultButton(self.windowInteg, text="Clear all",
+                                               width=0)  # width 0 means default width
+        buttonClearAllInteg.placeBt(relx=0.45, rely=0.62)
+        buttonClearAllInteg.configure(
+            command=lambda: ui.UnderlinedEntry.resetEntries(self.funcEntryInteg, self.uBoundEntryInteg,
+                                                            self.lBoundEntryInteg, self.itofEntryInteg))
+
+        funcLabelInteg = paramsGroupInteg.add_label("Enter function: ")
+        self.funcEntryInteg = paramsGroupInteg.add_entry(width=15)
+        self.funcEntryInteg.bind("<Key>", lambda e: self.handleKeyEvent(e))
+
+        spaceParamsLabelInteg = paramsGroupInteg.add_label("      ")
+
+        itofLabelInteg = paramsGroupInteg.add_label("In terms of: ")
+        self.itofEntryInteg = paramsGroupInteg.add_entry(width=5, placeholder="x")
+        self.itofEntryInteg.entryFrame.grid_configure(sticky=tk.W)
+        self.itofEntryInteg.bind("<Key>", lambda e: self.handleKeyEvent(e))
+
+        boundsGroupInteg = ui.OperationTypeGroup(self.windowInteg, relx=0.45, rely=0.3, name="Bounds")
+
+        boundsLabelInteg = boundsGroupInteg.add_label("Integral bounds: ")
+        self.lBoundEntryInteg = boundsGroupInteg.add_entry(width=5, placeholder="-∞", column=0)
+        self.lBoundEntryInteg.bind("<Key>", lambda e: self.handleKeyEvent(e))
+
+        spaceBoundLabelInteg = boundsGroupInteg.add_label("          ")
+        spaceBoundLabelInteg.grid_configure(row=1, column=1)
+
+        self.uBoundEntryInteg = boundsGroupInteg.add_entry(width=5, row=1, column=2, placeholder="+∞")
+        self.uBoundEntryInteg.bind("<Key>", lambda e: self.handleKeyEvent(e))
+
+        self.windowInteg.bind("<Escape>", lambda e: self.windowInteg.destroy())
+        self.windowInteg.mainloop()
+
+    def handleKeyEvent(self, event=None, forWhat="calc", recalling=False) -> None:
+        """
+        It can either calculate the integral of the
         given mathematical function, or display a window with the python code used to do that.
-        :param entryList: A list containing the different entries where the data must be read from in the following
-        order: [function entry, function's variable (in terms of), upper bound entry, lower bound entry]
-        :param labelList: A list containing the different labels that must be modified to display the result or
-        relevant information about the integral calculation.
-        They must follow this order: [result label, upper bound label, lower bound label]
         :param event: The event that triggered this function call
         :param forWhat: Can be either 'calc', to indicate that the integral must be calculated,
         or 'code' to indicate that the code necessary for this calculation must be displayed
@@ -347,182 +415,111 @@ def integWindow() -> None:
 
         recallingInteg = recalling
 
-        func = entryList[0].get()
-        itof = entryList[1].get()       # Stands for in terms of
-        uBoundSrc = entryList[2].get()
-        lBoundSrc = entryList[3].get()
-        rLabel = labelList[0]
-        uBoundLabel = labelList[1]
-        lBoundLabel = labelList[2]
-
+        # [resultLabelInteg, upperBoundLabelInteg, lowerBoundLabelInteg]
+        func = self.funcEntryInteg.get()
+        itof = self.itofEntryInteg.get()  # 'itof' stands for in terms of
+        uBoundSrc = self.uBoundEntryInteg.get()
+        lBoundSrc = self.lBoundEntryInteg.get()
 
         if forWhat.lower() == "code":
             definite = True
             if uBoundSrc.__contains__("∞") or lBoundSrc.__contains__("∞"):
                 definite = False
 
-            ui.CodeInfoWindow(code=f"integrate({calculus.cleanExpr(func)}, {(f'({itof}, {uBoundSrc}, {lBoundSrc})' if definite else f'Symbol({itof})')})",
-                           labelTitleText=f"Code used for calculating {'definite' if definite else 'indefinite'} integrals",
-                           library="from sympy import *",
-                           dimensions="400x220")
+            ui.CodeInfoWindow(code=f"integrate({calculus.cleanExpr(func)}, "
+                                   f"{(f'({itof}, {uBoundSrc}, {lBoundSrc})' if definite else f'Symbol({itof})')})",
+                              labelTitleText=f"Code used for calculating "
+                                             f"{'definite' if definite else 'indefinite'} integrals",
+                              library="from sympy import *", dimensions="400x220")
             return None
 
         if recallingInteg:
             if forWhat.lower() == "calc":
                 try:
-                    toShow, integMsg = calculus.calculateIntegral(func, inTermsOf=itof, uBound=uBoundSrc, lBound=lBoundSrc)
+                    toShow, integMsg = calculus.calculateIntegral(func, inTermsOf=itof,
+                                                                  uBound=uBoundSrc, lBound=lBoundSrc)
                 except Exception as e:
-                    # Exceptions will be caught all the time because the program will try to integrate incomplete expressions
+                    # Exceptions will be caught all the time because the program
+                    # will try to integrate incomplete expressions
                     # print(f"An error happened, specifically:\n {e} \n\n Tried: {calculus.cleanExpr(func)}")
                     str(e)  # Removes a warning
 
-                    rLabel.configure(fg=ui.LIGHT_DARK_DECO_BG)     # Indicates that the differential is being calculated
-                    uBoundLabel.configure(fg=ui.LIGHT_DARK_DECO_BG)
-                    lBoundLabel.configure(fg=ui.LIGHT_DARK_DECO_BG)
+                    # Indicates that the differential is being calculated
+                    self.resultLabelInteg.configure(fg=ui.LIGHT_DARK_DECO_BG)
+
+                    self.upperBoundLabelInteg.configure(fg=ui.LIGHT_DARK_DECO_BG)
+                    self.lowerBoundLabelInteg.configure(fg=ui.LIGHT_DARK_DECO_BG)
                 else:
                     if toShow is None:
-                        rLabel.configure(fg=ui.LIGHT_DARK_DECO_BG)
-                        uBoundLabel.configure(fg=ui.LIGHT_DARK_DECO_BG)
-                        lBoundLabel.configure(fg=ui.LIGHT_DARK_DECO_BG)
+                        self.resultLabelInteg.configure(fg=ui.LIGHT_DARK_DECO_BG)
+                        self.upperBoundLabelInteg.configure(fg=ui.LIGHT_DARK_DECO_BG)
+                        self.lowerBoundLabelInteg.configure(fg=ui.LIGHT_DARK_DECO_BG)
                     else:
-                        uBoundLabel.configure(text=uBoundSrc, fg=ui.FG_LABELS)
-                        lBoundLabel.configure(text=lBoundSrc, fg=ui.FG_LABELS)
-                        rLabel.configure(
-                            text=f"{calculus.cleanExpr(func)} d{itof} "
-                                 f"= {calculus.cleanExpr(toShow)}",
+                        self.upperBoundLabelInteg.configure(text=uBoundSrc, fg=ui.FG_LABELS)
+                        self.lowerBoundLabelInteg.configure(text=lBoundSrc, fg=ui.FG_LABELS)
+                        self.resultLabelInteg.configure(
+                            text=f"{calculus.cleanExpr(func)} d{itof} = {calculus.cleanExpr(toShow)}",
                             fg=ui.FG_LABELS)
 
-                        symbolLabelInteg.configure(width=round(len(rLabel["text"]) * 0.8))
+                        self.symbolLabelInteg.configure(width=round(len(self.resultLabelInteg["text"]) * 0.8))
 
             else:
                 raise SyntaxError(f"Invalid 'forWhat' given: {forWhat},\nExpected 'calc' or 'code'")
 
         if not recallingInteg:
             recallingInteg = True
-            windowInteg.after(1, lambda: integHandleKeyEvent(entryList, labelList, event, forWhat, recallingInteg))
+            self.windowInteg.after(1, lambda: self.handleKeyEvent(event, forWhat, recallingInteg))
         else:
             recallingInteg = False
 
-
-        # Make it so that this function calculates the integral in real time and displays under the window
-
-    windowInteg = tk.Tk()
-    windowInteg.geometry("480x350")
-    windowInteg.configure(background=ui.WINDOW_BG)
-    windowInteg.title(f"Calculating an integral (sympy)")
-    windowInteg.focus_force()
-
-    labelTitleInteg = ui.TitleLabel(windowInteg, text="Preparing the integral", relx=0.15, rely=0.1)
-
-    paramsGroupInteg = ui.OperationTypeGroup(windowInteg, relx=0.15, rely=0.3, name="Parameters")
+        # TODO: Make it so that this function calculates the integral in real time and displays under the window
 
 
-    resultGroupX = 0.152
-    resultGroupY = 0.73
-    symbolLabelInteg = tk.Label(windowInteg, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS, font=ui.GEN_CODE_FONT(30), text="∫", pady=10,
-                                padx=15, width=10, anchor=tk.W)
-    symbolLabelInteg.place(relx=resultGroupX, rely=resultGroupY)
+class Main:
+    @staticmethod
+    def generate() -> None:
+        """
+            Generates the program's main window
+            """
+        windowMain = tk.Tk()
+        windowMain.title("Main menu")
+        windowMain.geometry("640x380")
+        windowMain.configure(bg=ui.WINDOW_BG)
 
-    resultLabelInteg = tk.Label(windowInteg, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS, font=ui.GEN_CODE_FONT(), text="", pady=0, padx=10)
-    resultLabelInteg.place(relx=resultGroupX+0.11, rely=resultGroupY+0.08)
+        canvasMain = tk.Canvas(windowMain, width=640, height=380, bg=ui.WINDOW_BG)
+        canvasMain.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-    upperBoundLabelInteg = tk.Label(windowInteg, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS, font=ui.GEN_CODE_FONT(12), text="")
-    upperBoundLabelInteg.place(relx=resultGroupX+0.08, rely=resultGroupY+0.03)
+        decoLineTopInfoMain = canvasMain.create_line((20, 69, 620, 69),
+                                                     fill=ui.DARK_DECO_BG)  # Line is just 1px under frame ✔
+        decoRectBtMain = canvasMain.create_rectangle((20, 89, 620, 360), outline=ui.LIGHT_DARK_DECO_BG)
 
-    lowerBoundLabelInteg = tk.Label(windowInteg, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS, font=ui.GEN_CODE_FONT(12), text="")
-    lowerBoundLabelInteg.place(relx=resultGroupX+0.08, rely=resultGroupY+0.14)
+        frameInfoMain = tk.Frame(canvasMain, width=640, height=70, bg=ui.WINDOW_BG)
+        frameInfoMain.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
 
+        labelInfoMain = ui.TitleLabel(frameInfoMain, text="Choose what you want to do: ", relx=0.03, rely=0.5)
 
-    buttonIntegCode = ui.DefaultButton(windowInteg, text="See code", width=0)  # width 0 means default width
-    buttonIntegCode.placeBt(relx=0.70, rely=0.62)
-    buttonIntegCode.configure(command=lambda: integHandleKeyEvent([funcEntryInteg, itofEntryInteg,
-                                                          uBoundEntryInteg, lBoundEntryInteg],
-                                                         [resultLabelInteg, upperBoundLabelInteg, lowerBoundLabelInteg],
-                                                          forWhat="code"))
+        graphGroup = ui.OperationTypeGroup(canvasMain, name="Graphing", relx=0.05, rely=0.29, anchor=None)
+        btGraph2d = graphGroup.add_button("Draw 2D graph")
+        btGraph2d.configure(command=lambda: Graph2D())
 
-    buttonClearAllInteg = ui.DefaultButton(windowInteg, text="Clear all", width=0)  # width 0 means default width
-    buttonClearAllInteg.placeBt(relx=0.45, rely=0.62)
-    buttonClearAllInteg.configure(command=lambda: ui.UnderlinedEntry.resetEntries(funcEntryInteg, uBoundEntryInteg,
-                                                                           lBoundEntryInteg, itofEntryInteg))
+        btGraph3d = graphGroup.add_button("Draw 3D graph")
+        btGraph3d.configure(command=lambda: Graph3D())
 
-    funcLabelInteg = paramsGroupInteg.add_label("Enter function: ")
-    funcEntryInteg = paramsGroupInteg.add_entry(width=15)
-    funcEntryInteg.bind("<Key>", lambda e: integHandleKeyEvent([funcEntryInteg, itofEntryInteg,
-                                                         uBoundEntryInteg, lBoundEntryInteg],
-                                                         [resultLabelInteg, upperBoundLabelInteg, lowerBoundLabelInteg], e))
+        derivateGroupMain = ui.OperationTypeGroup(canvasMain, name="Differentials", relx=0.05, rely=0.52)
+        btDeriv = derivateGroupMain.add_button(text="Calculate derivative")
+        btDeriv.configure(command=lambda: DifferentialCalculator())
 
-    spaceParamsLabelInteg = paramsGroupInteg.add_label("      ")
+        btPartDeriv = derivateGroupMain.add_button(text="Calculate partial\nderivative", height=2)
+        btPartDeriv.configure(command=lambda: DifferentialCalculator(partial=True))
 
-    itofLabelInteg = paramsGroupInteg.add_label("In terms of: ")
-    itofEntryInteg = paramsGroupInteg.add_entry(width=5, placeholder="x")
-    itofEntryInteg.entryFrame.grid_configure(sticky=tk.W)
-    itofEntryInteg.bind("<Key>", lambda e: integHandleKeyEvent([funcEntryInteg, itofEntryInteg,
-                                                         uBoundEntryInteg, lBoundEntryInteg],
-                                                         [resultLabelInteg, upperBoundLabelInteg, lowerBoundLabelInteg], e))
+        integGroupMain = ui.OperationTypeGroup(canvasMain, name="Integrals", relx=0.05, rely=0.8)
+        btInteg = integGroupMain.add_button(text="Calculate integral")
+        btInteg.configure(command=lambda: IntegralCalculator())
 
-
-    boundsGroupInteg = ui.OperationTypeGroup(windowInteg, relx=0.45, rely=0.3, name="Bounds")
-
-    boundsLabelInteg = boundsGroupInteg.add_label("Integral bounds: ")
-    lBoundEntryInteg = boundsGroupInteg.add_entry(width=5, placeholder="-∞", column=0)
-    lBoundEntryInteg.bind("<Key>", lambda e: integHandleKeyEvent([funcEntryInteg, itofEntryInteg,
-                                                        uBoundEntryInteg, lBoundEntryInteg],
-                                                         [resultLabelInteg, upperBoundLabelInteg, lowerBoundLabelInteg],
-                                                        e))
-
-    spaceBoundLabelInteg = boundsGroupInteg.add_label("          ")
-    spaceBoundLabelInteg.grid_configure(row=1, column=1)
-
-    uBoundEntryInteg = boundsGroupInteg.add_entry(width=5, row=1, column=2, placeholder="+∞")
-    uBoundEntryInteg.bind("<Key>", lambda e: integHandleKeyEvent([funcEntryInteg, itofEntryInteg,
-                                                        uBoundEntryInteg, lBoundEntryInteg],
-                                                        [resultLabelInteg, upperBoundLabelInteg, lowerBoundLabelInteg],
-                                                        e))
-
-    windowInteg.bind("<Escape>", lambda e: windowInteg.destroy())
-    windowInteg.mainloop()
+        windowMain.bind("<Escape>", lambda event: windowMain.destroy())
+        windowMain.resizable(False, False)
+        windowMain.mainloop()
 
 
-def generateMain() -> None:
-    """
-    Generates the program's main window
-    """
-    windowMain = tk.Tk()
-    windowMain.title("Main menu")
-    windowMain.geometry("640x380")
-    windowMain.configure(bg=ui.WINDOW_BG)
-
-    canvasMain = tk.Canvas(windowMain, width=640, height=380, bg=ui.WINDOW_BG)
-    canvasMain.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-
-    decoLineTopInfoMain = canvasMain.create_line((20, 69, 620, 69), fill=ui.DARK_DECO_BG)  # Line is just 1px under frame ✔
-    decoRectBtMain = canvasMain.create_rectangle((20, 89, 620, 360), outline=ui.LIGHT_DARK_DECO_BG)
-
-    frameInfoMain = tk.Frame(canvasMain, width=640, height=70, bg=ui.WINDOW_BG)
-    frameInfoMain.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
-
-    labelInfoMain = ui.TitleLabel(frameInfoMain, text="Choose what you want to do: ", relx=0.03, rely=0.5)
-
-    graphGroup = ui.OperationTypeGroup(canvasMain, name="Graphing", relx=0.05, rely=0.29, anchor=None)
-    btGraph2d = graphGroup.add_button("Draw 2D graph")
-    btGraph2d.configure(command=graph2dWindow)
-
-    btGraph3d = graphGroup.add_button("Draw 3D graph")
-    btGraph3d.configure(command=graph3dWindow)
-
-    derivateGroupMain = ui.OperationTypeGroup(canvasMain, name="Differentials", relx=0.05, rely=0.52)
-    btDeriv = derivateGroupMain.add_button(text="Calculate derivative")
-    btDeriv.configure(command=diffWindow)
-
-    btPartDeriv = derivateGroupMain.add_button(text="Calculate partial\nderivative", height=2)
-    btPartDeriv.configure(command=lambda: diffWindow(partial=True))
-
-    integGroupMain = ui.OperationTypeGroup(canvasMain, name="Integrals", relx=0.05, rely=0.8)
-    btInteg = integGroupMain.add_button(text="Calculate integral")
-    btInteg.configure(command=integWindow)
-
-    windowMain.bind("<Escape>", lambda event: windowMain.destroy())
-    windowMain.resizable(False, False)
-    windowMain.mainloop()
-
-generateMain()
+if __name__ == '__main__':
+    Main.generate()
