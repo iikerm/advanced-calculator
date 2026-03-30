@@ -479,21 +479,24 @@ class Main:
     @staticmethod
     def generate() -> None:
         """
-            Generates the program's main window
-            """
+        Generates the program's main window
+        """
+        WIN_X = 540
+        WIN_Y = 380
+
         windowMain = tk.Tk()
         windowMain.title("Main menu")
-        windowMain.geometry("640x380")
+        windowMain.geometry(f"{WIN_X}x{WIN_Y}")
         windowMain.configure(bg=ui.WINDOW_BG)
 
-        canvasMain = tk.Canvas(windowMain, width=640, height=380, bg=ui.WINDOW_BG)
+        canvasMain = tk.Canvas(windowMain, width=WIN_X, height=WIN_Y, bg=ui.WINDOW_BG)
         canvasMain.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        decoLineTopInfoMain = canvasMain.create_line((20, 69, 620, 69),
+        decoLineTopInfoMain = canvasMain.create_line((20, 69, 520, 69),
                                                      fill=ui.DARK_DECO_BG)  # Line is just 1px under frame ✔
-        decoRectBtMain = canvasMain.create_rectangle((20, 89, 620, 360), outline=ui.LIGHT_DARK_DECO_BG)
+        decoRectBtMain = canvasMain.create_rectangle((20, 89, 520, 360), outline=ui.LIGHT_DARK_DECO_BG)
 
-        frameInfoMain = tk.Frame(canvasMain, width=640, height=70, bg=ui.WINDOW_BG)
+        frameInfoMain = tk.Frame(canvasMain, width=WIN_X, height=70, bg=ui.WINDOW_BG)
         frameInfoMain.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
 
         labelInfoMain = ui.TitleLabel(frameInfoMain, text="Choose what you want to do: ", relx=0.03, rely=0.5)
@@ -515,6 +518,10 @@ class Main:
         integGroupMain = ui.OperationTypeGroup(canvasMain, name="Integrals", relx=0.05, rely=0.8)
         btInteg = integGroupMain.add_button(text="Calculate integral")
         btInteg.configure(command=lambda: IntegralCalculator())
+
+        infoGroupMain = ui.OperationTypeGroup(canvasMain, name="Details", relx=0.41, rely=0.29)
+        infoGroupMain.add_label("TEMPORARY INFO, CHANGE LATER", wraplength=275, justify=tk.LEFT)
+        infoGroupMain.resize(relWidth=0.535, relHeight=0.607)
 
         windowMain.bind("<Escape>", lambda event: windowMain.destroy())
         windowMain.resizable(False, False)

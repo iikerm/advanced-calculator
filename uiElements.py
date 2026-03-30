@@ -43,20 +43,22 @@ def calculateForegroundColor(masterButton: tk.Button, hue: str) -> str:
     fg = "#000000"
 
     hue = hue.replace("#", "")
-    red = int(hue[0]+hue[1], 16)
-    green = int(hue[2]+hue[3], 16)
-    blue = int(hue[4]+hue[5], 16)
+    red = int(hue[0] + hue[1], 16)
+    green = int(hue[2] + hue[3], 16)
+    blue = int(hue[4] + hue[5], 16)
 
-    avg = int((red + green + blue)/3)
-    if avg < 255//2:        # Background is mostly dark, so a clear fg is better
+    avg = int((red + green + blue) / 3)
+    if avg < 255 // 2:  # Background is mostly dark, so a clear fg is better
         fg = "#ffffff"
     return fg
+
 
 class DefaultButton(tk.Button):
     """
     Custom button class that only uses some of the attributes from the original tk.Button class.
     It is used to define custom behaviour such as custom highlight when the cursor hovers over it.
     """
+
     def __init__(self,
                  master: tk.Tk | tk.Frame | tk.Canvas,
                  text: str,
@@ -65,9 +67,8 @@ class DefaultButton(tk.Button):
                  justify=tk.CENTER,
                  bg=LIGHT_DARK_DECO_BG,
                  activebackground=LIGHT_DARK_DECO_BG):
-
         super().__init__(master, text=text, bg=bg, width=width, height=height,
-                                activebackground=activebackground, bd=0, justify=justify)
+                         activebackground=activebackground, bd=0, justify=justify)
 
         self.master = master
         self.bind("<Enter>", lambda event: self.configure(background=BG_BT_HIGHLIGHT))
@@ -79,21 +80,22 @@ class DefaultButton(tk.Button):
     def gridBt(self, row: int, column: int, sticky=None, padx=0, pady=0):
         self.grid(row=row, column=column, sticky=sticky, pady=pady, padx=padx)
 
+
 class CodeInfoWindow:
     """
     Custom window used for displaying the python code used for performing the current operation
     """
+
     def __init__(self,
                  code: str,
-                 labelTitleText: str="",
-                 title: str="Expression used",
-                 library: str="",
+                 labelTitleText: str = "",
+                 title: str = "Expression used",
+                 library: str = "",
                  title_font=TITLE_FONT,
                  code_font=GEN_CODE_FONT(10),
-                 bg: str=WINDOW_BG,
-                 light_bg: str=LIGHT_WINDOW_BG,
-                 dimensions: str="300x200"):
-
+                 bg: str = WINDOW_BG,
+                 light_bg: str = LIGHT_WINDOW_BG,
+                 dimensions: str = "300x200"):
         self.title = title
 
         self.win = tk.Tk()
@@ -107,10 +109,11 @@ class CodeInfoWindow:
 
         self.titleLabel = TitleLabel(self.win, text=labelTitleText, font=title_font, relx=0.1, rely=0.1)
 
-        self.codeText = tk.Text(self.win, width=round(32*self.x/300), height=round(7*self.y/200), bd=0, bg=light_bg, font=code_font, wrap=tk.WORD)
+        self.codeText = tk.Text(self.win, width=round(32 * self.x / 300), height=round(7 * self.y / 200), bd=0,
+                                bg=light_bg, font=code_font, wrap=tk.WORD)
         self.codeText.place(relx=0.1, rely=0.3)
 
-        self.codeText.insert(tk.END, library+"\n\n")
+        self.codeText.insert(tk.END, library + "\n\n")
         self.codeText.insert(tk.END, code)
 
         self.codeText.configure(state="disabled")
@@ -125,10 +128,12 @@ class CodeInfoWindow:
     def destroyWin(self) -> None:
         self.win.destroy()
 
+
 class ColorButton(tk.Button):
     """
     Custom button class used to represent a specific color and is intended to be used as a color picker.
     """
+
     def __init__(self,
                  master: tk.Tk | tk.Frame | tk.Canvas,
                  text: str,
@@ -136,9 +141,8 @@ class ColorButton(tk.Button):
                  height=1,
                  bg="#0000ff",
                  bd=0):
-
         super().__init__(master, text=text, width=width, height=height, bg=bg, activebackground=bg, bd=bd,
-                                command=self.selectOwnColor)
+                         command=self.selectOwnColor)
 
         self.configure(fg=calculateForegroundColor(self, bg))
         self.master = master
@@ -153,16 +157,18 @@ class ColorButton(tk.Button):
         ColorButton's color pre-selected in said window
         """
         tempHue = str(colorchooser.askcolor(self.hue)[1])
-        if tempHue != "None":      # colorpicker returns "None" when the user closes the window without choosing a color
+        if tempHue != "None":  # colorpicker returns "None" when the user closes the window without choosing a color
             self.hue = tempHue
             self.configure(bg=self.hue, fg=calculateForegroundColor(self, self.hue))
         self.master.focus_force()
+
 
 class TitleLabel(tk.Label):
     """
     Special type of label that is intended for use as a title label.
     It is used instead of a normal tk.Label with future extensions in mind.
     """
+
     def __init__(self,
                  master: tk.Tk | tk.Frame | tk.Canvas,
                  text: str,
@@ -171,7 +177,6 @@ class TitleLabel(tk.Label):
                  font=TITLE_FONT,
                  bg=WINDOW_BG,
                  anchor=None):
-
         super().__init__(master, text=text, font=font, bg=bg)
 
         self.master = master
@@ -180,6 +185,7 @@ class TitleLabel(tk.Label):
         self.bg = bg
 
         self.place(relx=relx, rely=rely, anchor=anchor)
+
 
 class UnderlinedEntry(tk.Entry):
     """
@@ -215,7 +221,6 @@ class UnderlinedEntry(tk.Entry):
         self.bind("<FocusIn>", lambda event: self.manageFocus(True))
         self.bind("<FocusOut>", lambda event: self.manageFocus(False))
 
-
     def manageFocus(self, focusIn: bool) -> None:
         """
         Method that manages the removal and insertion of the entry's placeholder
@@ -226,7 +231,7 @@ class UnderlinedEntry(tk.Entry):
             if self.get() == self.placeholder:
                 self.delete('0', 'end')
                 self.configure(fg=FG_ENTRIES)
-            self.entryLowBorder.configure(bg=BG_ENTRY_LOW_ACTIVE)   # Needed so that the lower border still 'lights up'
+            self.entryLowBorder.configure(bg=BG_ENTRY_LOW_ACTIVE)  # Needed so that the lower border still 'lights up'
 
         else:
             if self.get() == "":
@@ -269,17 +274,14 @@ class UnderlinedEntry(tk.Entry):
                 raise SyntaxError(f"Tried to reset an object of type {type(args[i])}, "
                                   f"expected one of type 'UnderlinedEntry'")
 
+
 class OperationTypeGroup:
     """
     A special kind of container that is intended to group buttons, labels and other widgets with
     similar contexts together in a visual block.
     """
-    def __init__(self,
-                 master: tk.Tk | tk.Frame | tk.Canvas,
-                 relx: float,
-                 rely: float,
-                 anchor=None,
-                 name=""):
+
+    def __init__(self, master: tk.Tk | tk.Frame | tk.Canvas, relx: float, rely: float, anchor=None, name=""):
 
         self.groupButtons = []
         self.groupLabels = []
@@ -303,9 +305,19 @@ class OperationTypeGroup:
 
         if self.name != "":
             self.titleLabel = tk.Label(self.master, text=name, bg=WINDOW_BG, fg=FG_DECO_TITLES)
-            self.titleLabel.place(relx=self.relx+0.03, rely=self.rely-0.038)
+            self.titleLabel.place(relx=self.relx + 0.03, rely=self.rely - 0.038)
 
-    def add_button(self, text:str, width=20, height=1, bg=LIGHT_DARK_DECO_BG, justify=tk.CENTER, typ="normal") -> tk.Button:
+    def resize(self, relWidth: float = 0, relHeight: float = 0):
+        if relWidth > 0:
+            self.frame_obj.place_configure(relwidth=1)
+            self.masterFrame.place_configure(relwidth=relWidth)
+
+        if relHeight > 0:
+            self.frame_obj.place_configure(relheight=1)
+            self.masterFrame.place_configure(relheight=relHeight)
+
+    def add_button(self, text: str, width=20, height=1,
+                   bg=LIGHT_DARK_DECO_BG, justify=tk.CENTER, typ="normal") -> tk.Button:
         """
         Method that adds a DefaultButton or a ColorButton to the current group
         :param text: Button text
@@ -320,7 +332,8 @@ class OperationTypeGroup:
             width = None
 
         if typ.lower() == "normal":
-            tempButton = DefaultButton(self.frame_obj, text=text, height=height, width=width, bg=bg, activebackground=LIGHT_DARK_DECO_BG, justify=justify)
+            tempButton = DefaultButton(self.frame_obj, text=text, height=height, width=width, bg=bg,
+                                       activebackground=LIGHT_DARK_DECO_BG, justify=justify)
 
             self.groupButtons.append(tempButton)
             self.groupAll.append(tempButton)
@@ -339,15 +352,17 @@ class OperationTypeGroup:
 
         return tempButton
 
-
-    def add_label(self, text:str, anchor=None) -> tk.Label:
+    def add_label(self, text: str, anchor=None, wraplength=None, justify=None) -> tk.Label:
         """
         Method that adds a tk.Label to the current group
         :param text: Text in the label
         :param anchor: Label's anchor value
+        :param wraplength: Label's wraplength value
+        :param justify: Label's justify value
         :return: The label that was added to the group
         """
-        tempLabel = tk.Label(self.frame_obj, text=text, bg=WINDOW_BG, fg=FG_LABELS, anchor=anchor)
+        tempLabel = tk.Label(self.frame_obj, text=text, bg=WINDOW_BG, fg=FG_LABELS,
+                             anchor=anchor, wraplength=wraplength, justify=justify)
 
         self.groupLabels.append(tempLabel)
         self.groupAll.append(tempLabel)
