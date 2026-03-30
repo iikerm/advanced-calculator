@@ -8,6 +8,12 @@ import uiElements as ui
 
 
 class Graph2D:
+    DETAILS_LABEL_CONTENT = "Click here to enter the window for introducing the 2D graph's details.\n\n" \
+                            "This part of the program is able to draw any function in terms of any one variable" \
+                            " given. You will also be able to specify the color, as well as the range for which the" \
+                            " function is drawn.\nIn the same way as with every other part, there is also a button to" \
+                            " show what the code that computes this part looks like in python."
+
     def __init__(self):
         """
         Generates a window for introducing parameters to generate a representation of a 2D graph from a
@@ -34,7 +40,7 @@ class Graph2D:
 
         self.color2dGroup = ui.OperationTypeGroup(self.window2d, name="Select color: ", relx=0.5, rely=0.3)
         colLabel = self.color2dGroup.add_label("Click me  ⬇")
-        colButton = self.color2dGroup.add_button(text="", bg="blue", typ="color")
+        colButton = self.color2dGroup.add_color_button(text="", bg="#0000ff")
 
         self.vis2dGroup = ui.OperationTypeGroup(self.window2d, name="Visibility of the function: ", relx=0.5, rely=0.6)
         visFromEntry = self.vis2dGroup.add_entry(placeholder="from", width=5)
@@ -112,6 +118,12 @@ class Graph2D:
 
 
 class Graph3D:
+    DETAILS_LABEL_CONTENT = "Click here to enter the window for introducing the 3D graph's details.\n\n" \
+                            "This part of the program is able to draw any function in terms of any two variables" \
+                            " given. You will also be able to specify the color, as well as the range for which the" \
+                            " function is drawn.\nIn the same way as with every other part, there is also a button to" \
+                            " show what the code that computes this part looks like in python."
+
     def __init__(self):
         """
         Generates a window for introducing parameters to generate a representation of a 3D graph from a
@@ -133,20 +145,22 @@ class Graph3D:
         spaceLabel = self.graph3dGroup.add_label("       ")
 
         tofLabel = self.graph3dGroup.add_label("In terms of:")
-        tofXEntry = self.graph3dGroup.add_entry(width=5, placeholder="x")
-        tofXEntry.entryFrame.grid_configure(sticky=tk.W)
+        self.tofXEntry = self.graph3dGroup.add_entry(width=5, placeholder="x")
+        self.tofXEntry.entryFrame.grid_configure(sticky=tk.W)
+        self.tofXEntry.bind("<FocusOut>", lambda event: self.updateItofLabel("x"))
 
-        tofYEntry = self.graph3dGroup.add_entry(width=5, placeholder="y")
-        tofYEntry.entryFrame.grid_configure(sticky=tk.W)
+        self.tofYEntry = self.graph3dGroup.add_entry(width=5, placeholder="y")
+        self.tofYEntry.entryFrame.grid_configure(sticky=tk.W)
+        self.tofYEntry.bind("<FocusOut>", lambda event: self.updateItofLabel("y"))
 
         self.vis3dGroup = ui.OperationTypeGroup(self.window3d, name="Visibility of the function: ", relx=0.45, rely=0.3)
-        vis3dInfoLabelX = self.vis3dGroup.add_label(text="For first variable (x)")
+        self.vis3dInfoLabelX = self.vis3dGroup.add_label(text="For first variable (x)")
         visFromEntryX = self.vis3dGroup.add_entry(placeholder="from", width=5)
         visSpaceLabelX = self.vis3dGroup.add_label("           ")
         visSpaceLabelX.grid_configure(row=0, column=1)
         visToEntryX = self.vis3dGroup.add_entry(placeholder="to", width=5, column=2, row=1)
 
-        vis3dInfoLabelY = self.vis3dGroup.add_label(text="For second variable (y)")
+        self.vis3dInfoLabelY = self.vis3dGroup.add_label(text="For second variable (y)")
         visFromEntryY = self.vis3dGroup.add_entry(placeholder="from", width=5)
         visToEntryY = self.vis3dGroup.add_entry(placeholder="to", width=5, column=2, row=5)
 
@@ -165,6 +179,14 @@ class Graph3D:
 
         self.window3d.resizable(False, False)
         self.window3d.mainloop()
+
+    def updateItofLabel(self, variable: str = "x") -> None:
+        if variable == "x":
+            self.vis3dInfoLabelX.configure(text=f"For first variable ({self.tofXEntry.get()})")
+        elif variable == "y":
+            self.vis3dInfoLabelY.configure(text=f"For second variable ({self.tofYEntry.get()})")
+        else:
+            raise SyntaxError(f"Invalid variable '{variable}' received for Graph3D.updateItofLabel. Must be 'x' or 'y'")
 
     def generateGraph(self, forWhat="graph") -> None:
         """
@@ -220,6 +242,18 @@ class Graph3D:
 
 
 class DifferentialCalculator:
+    DETAILS_LABEL_CONTENT_PARTIALDIFF = "Click here to enter the window for real-time " \
+                                        "calculation of the partial derivative.\n\nThis part of the " \
+                                        "program is able to calculate any partial derivative in terms of the variable" \
+                                        " given.\nIn the same way as with every other part, there" \
+                                        " is also a button to show what the code that computes" \
+                                        " this part looks like in python."
+
+    DETAILS_LABEL_CONTENT_NORMALDIFF = "Click here to enter the window for real-time calculation of the differential" \
+                                       " equation.\n\nThis part of the program is able to calculate any differential" \
+                                       " equation given.\nIn the same way as with every other part, there is also a" \
+                                       " button to show what the code that computes this part looks like in python."
+
     def __init__(self, partial=False):
         """
         Function that generates a window where the user can introduce mathematical functions and see their derivative
@@ -325,6 +359,8 @@ class DifferentialCalculator:
 
 
 class IntegralCalculator:
+    DETAILS_LABEL_CONTENT = ""
+
     def __init__(self):
         """
         Generates the integral calculation window
@@ -472,10 +508,43 @@ class IntegralCalculator:
         else:
             recallingInteg = False
 
-        # TODO: Make it so that this function calculates the integral in real time and displays under the window
-
 
 class Main:
+    # Default content for the details label
+    DETAILS_LABEL_CONTENT = "Welcome to the Advanced Scientific Calculator!\n\n" \
+                            "Place the mouse pointer over any of the buttons to the left in order to see " \
+                            "a description of what they do."
+
+    DETAILS_DELAY_MS = 100
+
+    detailsLabel: tk.Label
+    windowMain: tk.Tk
+
+    @staticmethod
+    def replaceDetails(classHovered, partialDiff=False) -> None:
+        """
+        Replaces the contents of the details label by the details of the class being received as a parameter
+        :param classHovered: Class whose description is to be shown
+        :param partialDiff: If classHovered is DifferentialCalculator, chooses which one of the descriptions (for
+        partial derivative or for differential) is shown
+        """
+
+        text = ""
+        try:
+            text = classHovered.DETAILS_LABEL_CONTENT
+        except AttributeError:
+            try:
+                if partialDiff:
+                    text = classHovered.DETAILS_LABEL_CONTENT_PARTIALDIFF
+                else:
+                    text = classHovered.DETAILS_LABEL_CONTENT_NORMALDIFF
+            except AttributeError as e:
+                raise SyntaxError(f"Using invalid class '{classHovered}', use a valid one"
+                                  f" (i.e. one that has the attribute DETAILS_LABEL_CONTENT)."
+                                  f"\n\nCaught from: {e}")
+
+        Main.windowMain.after(Main.DETAILS_DELAY_MS, lambda: Main.detailsLabel.configure(text=text))
+
     @staticmethod
     def generate() -> None:
         """
@@ -484,16 +553,18 @@ class Main:
         WIN_X = 540
         WIN_Y = 380
 
-        windowMain = tk.Tk()
-        windowMain.title("Main menu")
-        windowMain.geometry(f"{WIN_X}x{WIN_Y}")
-        windowMain.configure(bg=ui.WINDOW_BG)
+        Main.windowMain = tk.Tk()
+        Main.windowMain.title("Main menu")
+        Main.windowMain.geometry(f"{WIN_X}x{WIN_Y}")
+        Main.windowMain.configure(bg=ui.WINDOW_BG)
 
-        canvasMain = tk.Canvas(windowMain, width=WIN_X, height=WIN_Y, bg=ui.WINDOW_BG)
+        canvasMain = tk.Canvas(Main.windowMain, width=WIN_X, height=WIN_Y, bg=ui.WINDOW_BG)
         canvasMain.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        canvasMain.bind("<Enter>", lambda e: Main.replaceDetails(Main))
 
-        decoLineTopInfoMain = canvasMain.create_line((20, 69, 520, 69),
-                                                     fill=ui.DARK_DECO_BG)  # Line is just 1px under frame ✔
+        # Line is just 1px under frame
+        decoLineTopInfoMain = canvasMain.create_line((20, 69, 520, 69), fill=ui.DARK_DECO_BG)
+
         decoRectBtMain = canvasMain.create_rectangle((20, 89, 520, 360), outline=ui.LIGHT_DARK_DECO_BG)
 
         frameInfoMain = tk.Frame(canvasMain, width=WIN_X, height=70, bg=ui.WINDOW_BG)
@@ -501,31 +572,42 @@ class Main:
 
         labelInfoMain = ui.TitleLabel(frameInfoMain, text="Choose what you want to do: ", relx=0.03, rely=0.5)
 
+        # RIGHT SIDE:
+        infoGroupMain = ui.OperationTypeGroup(canvasMain, name="Details", relx=0.41, rely=0.29)
+        Main.detailsLabel = infoGroupMain.add_label(Main.DETAILS_LABEL_CONTENT, wraplength=275, justify=tk.LEFT)
+        infoGroupMain.resize(relWidth=0.535, relHeight=0.607)
+
+        # LEFT SIDE:
         graphGroup = ui.OperationTypeGroup(canvasMain, name="Graphing", relx=0.05, rely=0.29, anchor=None)
         btGraph2d = graphGroup.add_button("Draw 2D graph")
         btGraph2d.configure(command=lambda: Graph2D())
+        btGraph2d.overrideEnterBinding(lambda: Main.replaceDetails(Graph2D))
 
         btGraph3d = graphGroup.add_button("Draw 3D graph")
         btGraph3d.configure(command=lambda: Graph3D())
+        btGraph3d.overrideEnterBinding(lambda: Main.replaceDetails(Graph3D))
 
         derivateGroupMain = ui.OperationTypeGroup(canvasMain, name="Differentials", relx=0.05, rely=0.52)
         btDeriv = derivateGroupMain.add_button(text="Calculate derivative")
         btDeriv.configure(command=lambda: DifferentialCalculator())
 
+        # This line has a warning, but it is controlled.
+        btDeriv.overrideEnterBinding(lambda: Main.replaceDetails(DifferentialCalculator, False))
+
         btPartDeriv = derivateGroupMain.add_button(text="Calculate partial\nderivative", height=2)
         btPartDeriv.configure(command=lambda: DifferentialCalculator(partial=True))
+
+        # This line has a warning, but it is controlled.
+        btPartDeriv.overrideEnterBinding(lambda: Main.replaceDetails(DifferentialCalculator, True))
 
         integGroupMain = ui.OperationTypeGroup(canvasMain, name="Integrals", relx=0.05, rely=0.8)
         btInteg = integGroupMain.add_button(text="Calculate integral")
         btInteg.configure(command=lambda: IntegralCalculator())
+        btInteg.overrideEnterBinding(lambda: Main.replaceDetails(IntegralCalculator))
 
-        infoGroupMain = ui.OperationTypeGroup(canvasMain, name="Details", relx=0.41, rely=0.29)
-        infoGroupMain.add_label("TEMPORARY INFO, CHANGE LATER", wraplength=275, justify=tk.LEFT)
-        infoGroupMain.resize(relWidth=0.535, relHeight=0.607)
-
-        windowMain.bind("<Escape>", lambda event: windowMain.destroy())
-        windowMain.resizable(False, False)
-        windowMain.mainloop()
+        Main.windowMain.bind("<Escape>", lambda event: Main.windowMain.destroy())
+        Main.windowMain.resizable(False, False)
+        Main.windowMain.mainloop()
 
 
 if __name__ == '__main__':
