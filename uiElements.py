@@ -66,13 +66,48 @@ class DefaultButton(tk.Button):
                  height=1,
                  justify=tk.CENTER,
                  bg=LIGHT_DARK_DECO_BG,
-                 activebackground=LIGHT_DARK_DECO_BG):
+                 activebackground=LIGHT_DARK_DECO_BG,
+                 enterMethods=None,
+                 leaveMethods=None):
+
         super().__init__(master, text=text, bg=bg, width=width, height=height,
                          activebackground=activebackground, bd=0, justify=justify)
 
         self.master = master
         self.bind("<Enter>", lambda event: self.configure(background=BG_BT_HIGHLIGHT))
         self.bind("<Leave>", lambda event: self.configure(background=LIGHT_DARK_DECO_BG))
+
+    def overrideEnterBinding(self, *args):
+        """
+        Overrides the default binding for the 'Enter' event to execute the methods received by argument
+        """
+        self.bind("<Enter>", lambda event: self.enterMethod(args))
+
+    def overrideLeaveBinding(self, *args):
+        """
+        Overrides the default binding for the 'Leave' event to execute the methods received by argument
+        """
+        self.bind("<Leave>", lambda event: self.leaveMethod(args))
+
+    def enterMethod(self, methods=None) -> None:
+        """
+        Defines the code to be executed when the button raises the 'Enter' event.
+        :param methods: The extra methods (if any) to be executed after the default button highlighting
+        """
+        self.configure(background=BG_BT_HIGHLIGHT)
+        if methods is not None:
+            for method in methods:
+                method()
+
+    def leaveMethod(self, methods=None) -> None:
+        """
+        Defines the code to be executed when the button raises the 'Leave' event.
+        :param methods: The extra methods (if any) to be executed after the returning the button to its default color
+        """
+        self.configure(background=LIGHT_DARK_DECO_BG)
+        if methods is not None:
+            for method in methods:
+                method()
 
     def placeBt(self, relx: float, rely: float, anchor=None):
         self.place(relx=relx, rely=rely, anchor=anchor)
