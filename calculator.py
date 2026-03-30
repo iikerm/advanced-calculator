@@ -10,7 +10,7 @@ import uiElements as ui
 class Graph2D:
     DETAILS_LABEL_CONTENT = "Click here to enter the window for introducing the 2D graph's details.\n\n" \
                             "This part of the program is able to draw any function in terms of any one variable" \
-                            " given. You will also be able to specify the color, as well as the range for which the" \
+                            " given. You will also be able to specify the color, as well as the range in which the" \
                             " function is drawn.\nIn the same way as with every other part, there is also a button to" \
                             " show what the code that computes this part looks like in python."
 
@@ -120,7 +120,7 @@ class Graph2D:
 class Graph3D:
     DETAILS_LABEL_CONTENT = "Click here to enter the window for introducing the 3D graph's details.\n\n" \
                             "This part of the program is able to draw any function in terms of any two variables" \
-                            " given. You will also be able to specify the color, as well as the range for which the" \
+                            " given. You will also be able to specify the range (for both variables) in which the" \
                             " function is drawn.\nIn the same way as with every other part, there is also a button to" \
                             " show what the code that computes this part looks like in python."
 
@@ -276,7 +276,7 @@ class DifferentialCalculator:
         self.windowDiff.title(f"Calculating a{' partial ' if partial else ' '}derivative (sympy)")
         self.windowDiff.focus_force()
 
-        labelTitleDiff = ui.TitleLabel(self.windowDiff, text="Preparing the differential: ", relx=0.1, rely=0.1)
+        labelTitleDiff = ui.TitleLabel(self.windowDiff, text="Define the differential: ", relx=0.1, rely=0.1)
 
         paramsGroupDiff = ui.OperationTypeGroup(self.windowDiff, name="Enter parameters: ", relx=0.1, rely=0.3)
         self.resultLabelDiff = tk.Label(self.windowDiff, bg=ui.LIGHT_WINDOW_BG, fg=ui.FG_LABELS,
@@ -359,7 +359,10 @@ class DifferentialCalculator:
 
 
 class IntegralCalculator:
-    DETAILS_LABEL_CONTENT = ""
+    DETAILS_LABEL_CONTENT = "Click here to enter the window for real-time calculation of the integral.\n\n" \
+                            "This part of the program is able to calculate any integral, be it in a" \
+                            " defined range or not.\nIn the same way as with every other part, there is also a" \
+                            " button to show what the code that computes this part looks like in python."
 
     def __init__(self):
         """
@@ -373,7 +376,7 @@ class IntegralCalculator:
         self.windowInteg.title(f"Calculating an integral (sympy)")
         self.windowInteg.focus_force()
 
-        labelTitleInteg = ui.TitleLabel(self.windowInteg, text="Preparing the integral", relx=0.15, rely=0.1)
+        labelTitleInteg = ui.TitleLabel(self.windowInteg, text="Define the integral: ", relx=0.15, rely=0.1)
 
         paramsGroupInteg = ui.OperationTypeGroup(self.windowInteg, relx=0.15, rely=0.3, name="Parameters")
 
@@ -513,7 +516,11 @@ class Main:
     # Default content for the details label
     DETAILS_LABEL_CONTENT = "Welcome to the Advanced Scientific Calculator!\n\n" \
                             "Place the mouse pointer over any of the buttons to the left in order to see " \
-                            "a description of what they do."
+                            "a description of what they do.\n\n" \
+                            "This calculator is intended as a learning resource for some of the libraries that work" \
+                            " with mathematical functions in python, and so in all of the parts there is a button" \
+                            " that will allow you to see the code required to compute that specific mathematical" \
+                            " operation."
 
     DETAILS_DELAY_MS = 100
 
